@@ -64,7 +64,7 @@ L’objectif était de remplacer les fichiers Excel et les suivis manuels par un
 
 ```bash
 1. Copier le dossier du plugin dans /wp-content/plugins/
-2. Copier le dossier Vendor dans /wp-content
+2. Télécharger la librairie DomPDF (https://github.com/dompdf/dompdf) et copier le dossier dans /wp-content/vendor
 3. Activer le plugin depuis l’administration WordPress
 4. Configurer les paramètres du plugin
 ```
