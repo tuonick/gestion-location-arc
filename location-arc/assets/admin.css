@@ -1,0 +1,387 @@
+
+.locarc-wrap { max-width: 1200px; }
+.locarc-tabs { margin-top: 10px; }
+.locarc-toolbar { display:flex; gap:10px; align-items:center; margin: 12px 0; }
+.locarc-toolbar-left { display:flex; gap:10px; align-items:center; }
+.locarc-table code { font-size: 12px; }
+.locarc-unpaid td { background: rgba(255, 165, 0, 0.18) !important; }
+.locarc-paid td { background: rgba(46, 204, 113, 0.12) !important; }
+
+/* highlight newly created row */
+.locarc-row-new td { animation: locarcFlash 3.5s ease-out 1; }
+@keyframes locarcFlash {
+  0% { background: rgba(100, 200, 255, 0.35); }
+  100% { background: inherit; }
+}
+/* Summary cards (contracts dashboard)
+   Desktop: keep on ONE line by using a compact 8-column grid.
+   Mobile: one-line horizontal slider (scroll).
+*/
+.locarc-cards {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 0;
+}
+.locarc-card {
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding: 8px 10px;
+  min-width: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.locarc-card-title { font-size:11px; color:#6b7280; }
+.locarc-card-value { font-size:20px; font-weight:700; margin-top:3px; }
+
+/* If the admin width is smaller, allow 2 rows rather than overflow */
+@media (max-width: 1200px) {
+  .locarc-wrap { max-width: 100%; }
+  .locarc-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* WP admin mobile breakpoint */
+@media (max-width: 782px) {
+  .locarc-cards {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+  }
+  .locarc-card {
+    flex: 0 0 220px;
+    scroll-snap-align: start;
+  }
+  .locarc-cards::-webkit-scrollbar { height: 8px; }
+}
+.locarc-modal { position: fixed; inset: 0; z-index: 100000; display:flex; align-items:center; justify-content:center; padding: 24px 12px; }
+.locarc-modal-backdrop { position:absolute; inset:0; background: rgba(0,0,0,.45); }
+.locarc-modal-dialog { position: relative; max-width: 760px; width: 100%; background:#fff; border-radius: 14px; border:1px solid #e5e7eb; box-shadow: 0 10px 30px rgba(0,0,0,.25); overflow:hidden; max-height: 92vh; display:flex; flex-direction:column; }
+.locarc-modal-dialog.locarc-modal-dialog-tall { max-width: 860px; max-height: calc(98vh + 5cm); }
+.locarc-modal-header { display:flex; justify-content:space-between; align-items:center; padding: 12px 14px; background:#f9fafb; border-bottom:1px solid #e5e7eb; }
+.locarc-modal-title { font-weight: 700; }
+.locarc-modal-close { background: transparent; border:0; font-size: 22px; cursor: pointer; }
+.locarc-modal-body { padding: 14px; overflow-y:auto; flex: 1; }
+.locarc-modal-footer { padding: 12px 14px; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:10px; background:#fff; }
+.locarc-form { display:grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.locarc-form label { display:block; font-size: 12px; color:#6b7280; margin-bottom:4px; }
+.locarc-form input, .locarc-form select { width:100%; }
+.locarc-form .full { grid-column: 1 / -1; }
+.locarc-import-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 12px; }
+.locarc-import-card { background:#fff; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; }
+.locarc-hint { font-size: 12px; color:#6b7280; margin-top: 6px; }
+.locarc-pill { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#eef2ff; font-size: 12px; }
+.locarc-suggest { position: relative; }
+.locarc-suggest-list { position:absolute; left:0; right:0; top:100%; background:#fff; border:1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,.12); max-height: 220px; overflow:auto; z-index: 100001; }
+.locarc-suggest-item { padding: 8px 10px; cursor:pointer; }
+.locarc-suggest-item:hover { background:#f3f4f6; }
+
+/* Read-only identifier peek (no click-to-fill) */
+.locarc-peek-list .locarc-suggest-item { cursor: default; }
+
+
+.locarc-toolbar { justify-content: space-between; flex-wrap: wrap; }
+.locarc-toolbar-right { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+.locarc-counters { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+.locarc-filter-input { min-width: 260px; }
+.locarc-filter-select { min-width: 160px; }
+.locarc-sortable thead th { cursor: pointer; user-select: none; }
+.locarc-sortable thead th[data-sort="none"] { cursor: default; }
+.locarc-sort-indicator { margin-left:6px; opacity: .55; font-size: 12px; }
+
+/* FLAG rows (inventory) */
+tr.locarc-flag > td { background: #ffe8e8 !important; }
+tr.locarc-flag > td code { background: rgba(0,0,0,0.04); }
+
+.locarc-filter-select[multiple]{ min-width:140px; height: 90px; }
+
+/* Collapsible filters on mobile */
+.locarc-filters { margin-left:0; }
+/* When there is a left toolbar section (branches/poignées), keep filters aligned to the right */
+.locarc-toolbar-left + .locarc-filters { margin-left:auto; }
+.locarc-filters > summary { display:none; cursor:pointer; user-select:none; font-weight:600; }
+
+@media (max-width: 782px) {
+  .locarc-card { min-width: 150px; }
+  .locarc-card-value { font-size: 20px; }
+  .locarc-toolbar { align-items: stretch; }
+  .locarc-toolbar-left { width:100%; justify-content: space-between; }
+  .locarc-counters { width:100%; }
+  .locarc-filters { width:100%; border:1px solid #e5e7eb; border-radius:12px; padding:8px 10px; background:#fff; }
+  .locarc-filters > summary { display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
+  .locarc-filters > summary:after { content:'▾'; font-size:12px; opacity:.7; }
+  .locarc-filters[open] > summary:after { content:'▴'; }
+  .locarc-filters[open] > summary { margin-bottom:8px; }
+  .locarc-toolbar-right { width:100%; }
+  .locarc-filter-input { width:100%; min-width:0; }
+  .locarc-filter-select[multiple]{ width:100%; min-width:0; height: 110px; }
+}
+
+
+
+@media (max-width: 782px) {
+  .locarc-modal {
+    align-items: flex-start;
+    padding: 10px 14px;
+  }
+  .locarc-modal-dialog {
+    width: min(88vw, 560px);
+    max-width: min(88vw, 560px);
+    max-height: calc(100dvh - 14px);
+    border-radius: 12px;
+  }
+  .locarc-modal-dialog.locarc-modal-dialog-tall {
+    width: min(88vw, 520px);
+    max-width: min(88vw, 520px);
+    max-height: calc(100dvh - 14px);
+  }
+  .locarc-modal-header,
+  .locarc-modal-body,
+  .locarc-modal-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .locarc-modal-body {
+    overflow-y: auto;
+    overflow-x: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+  .locarc-suggest {
+    position: relative;
+    z-index: 100003;
+  }
+  .locarc-suggest-list {
+    max-height: min(40dvh, 300px);
+  }
+
+  .locarc-modal-dialog.locarc-modal-dialog-assign {
+    width: min(88vw, 460px);
+    max-width: min(88vw, 460px);
+    height: auto;
+    max-height: min(calc(100dvh - 28px), 640px);
+  }
+  .locarc-modal-dialog.locarc-modal-dialog-assign .locarc-modal-body {
+    flex: 0 1 auto;
+    min-height: 0;
+    padding-bottom: 8px;
+    overflow-y: auto;
+  }
+  .locarc-modal-dialog.locarc-modal-dialog-assign .locarc-modal-footer {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .locarc-modal-dialog.locarc-modal-dialog-assign .locarc-suggest-list {
+    max-height: min(30dvh, 260px);
+  }
+}
+
+
+/* Equipment fields inside contract modals */
+.locarc-eq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px;}
+@media (max-width: 900px){.locarc-eq-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width: 520px){.locarc-eq-grid{grid-template-columns:1fr;}}
+
+
+.locarc-cheque-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;}
+@media (max-width: 782px){
+  .locarc-cheque-grid{grid-template-columns:repeat(2,1fr);}
+  .locarc-filters .locarc-toolbar-right{position:relative;z-index:2;}
+}
+@media (max-width: 520px){
+  .locarc-cheque-grid{grid-template-columns:1fr;}
+}
+
+/* =========================================================
+   TAB GROUP PILLS
+   ========================================================= */
+.locarc-tab-groups { margin-top: 8px; }
+.locarc-tab-group-pills {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.locarc-tab-group-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+  user-select: none;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.locarc-tab-group-pill.is-active {
+  background: #2271b1;
+  border-color: #2271b1;
+  color: #fff;
+}
+.locarc-tab-group-pill:hover:not(.is-active) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+.locarc-tabs--hidden { display: none !important; }
+
+/* =========================================================
+   KPI ROW  (replaces the old 8-card grid)
+   ========================================================= */
+.locarc-kpi-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 14px 0 4px;
+}
+.locarc-kpi {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  min-width: 140px;
+}
+.locarc-kpi--primary {
+  padding: 16px 24px;
+  border-color: #2271b1;
+  border-width: 2px;
+}
+.locarc-kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+.locarc-kpi--primary .locarc-kpi-label { color: #2271b1; }
+.locarc-kpi-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+}
+.locarc-kpi--primary .locarc-kpi-value { font-size: 32px; }
+
+/* breakdown chips row */
+.locarc-kpi-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.locarc-kpi-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 6px 12px;
+  min-width: 60px;
+}
+.locarc-kpi-chip-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+.locarc-kpi-chip-lbl {
+  font-size: 10px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-top: 3px;
+  text-align: center;
+}
+
+@media (max-width: 782px) {
+  .locarc-kpi-row { flex-direction: column; align-items: stretch; }
+  .locarc-kpi--primary { padding: 12px 16px; }
+  .locarc-kpi-value { font-size: 24px; }
+  .locarc-kpi--primary .locarc-kpi-value { font-size: 28px; }
+}
+
+/* =========================================================
+   PAID BADGE  (replaces <select>)
+   ========================================================= */
+.locarc-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+.locarc-paid-badge:hover { opacity: .8; }
+.locarc-paid-badge--paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+.locarc-paid-badge--unpaid {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* =========================================================
+   DATE COLORING
+   ========================================================= */
+.locarc-date-expiring { color: #d97706; font-weight: 600; }
+.locarc-date-expired  { color: #dc2626; font-weight: 600; }
+
+/* =========================================================
+   ACTION DROPDOWN
+   ========================================================= */
+.locarc-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.locarc-dropdown-toggle {
+  white-space: nowrap;
+}
+.locarc-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 9999;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  overflow: hidden;
+}
+.locarc-dropdown.is-open .locarc-dropdown-menu { display: block; }
+.locarc-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 7px 14px;
+  font-size: 13px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #111827;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.locarc-dropdown-item:hover { background: #f3f4f6; color: #111827; }
+.locarc-dropdown-item--danger { color: #dc2626; }
+.locarc-dropdown-item--danger:hover { background: #fef2f2; color: #b91c1c; }
+.locarc-dropdown-sep {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
