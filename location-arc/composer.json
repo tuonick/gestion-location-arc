@@ -1,0 +1,12 @@
+{
+    "name": "acsim/location-arc",
+    "description": "Plugin WordPress de gestion de location d'arcs (ACSIM)",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
