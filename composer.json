@@ -1,0 +1,24 @@
+{
+    "name": "acsim/location-arc",
+    "description": "Plugin WordPress de gestion de location d'arcs (ACSIM)",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4",
+        "dompdf/dompdf": "^2.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "extra": {
+        "notes": [
+            "IMPORTANT – Option recommandée (Option C) :",
+            "Lancez 'composer require dompdf/dompdf' à la racine de votre installation WordPress.",
+            "Le plugin détectera automatiquement ABSPATH/vendor/autoload.php.",
+            "Le vendor/ de ce plugin n'a pas besoin d'exister dans ce cas.",
+            "",
+            "Alternative : lancez 'composer install' dans ce dossier plugin.",
+            "Le chemin LOCARC_PLUGIN_DIR/vendor/autoload.php sera alors utilisé en fallback."
+        ]
+    }
+}
