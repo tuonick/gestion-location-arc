@@ -1,0 +1,8 @@
+FPDF
+====
+
+FPDF is released under a permissive license with no usage restriction.
+It may be embedded in an application, with or without modifications.
+
+Upstream project: https://www.fpdf.org/
+License FAQ: https://www.fpdf.org/en/FAQ.php#q1

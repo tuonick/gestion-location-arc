@@ -73,6 +73,7 @@
 .locarc-import-card { background:#fff; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; }
 .locarc-hint { font-size: 12px; color:#6b7280; margin-top: 6px; }
 .locarc-pill { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#eef2ff; font-size: 12px; }
+.locarc-pill--money { background:#e6f4ec; color:#006b26; font-weight:600; }
 .locarc-suggest { position: relative; }
 .locarc-suggest-list { position:absolute; left:0; right:0; top:100%; background:#fff; border:1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,.12); max-height: 220px; overflow:auto; z-index: 100001; }
 .locarc-suggest-item { padding: 8px 10px; cursor:pointer; }
@@ -265,6 +266,9 @@ tr.locarc-flag > td code { background: rgba(0,0,0,0.04); }
   line-height: 1;
 }
 .locarc-kpi--primary .locarc-kpi-value { font-size: 32px; }
+.locarc-kpi--invest { border-color: #008a35; border-width: 2px; padding: 16px 24px; }
+.locarc-kpi--invest .locarc-kpi-label { color: #008a35; }
+.locarc-kpi--invest .locarc-kpi-value { font-size: 32px; color: #008a35; }
 
 /* breakdown chips row */
 .locarc-kpi-breakdown {

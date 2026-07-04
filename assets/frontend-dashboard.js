@@ -26,7 +26,7 @@
   const drawerClose  = document.getElementById('locarc-fe-drawer-close');
 
   // Current drawer state
-  let drawerMode = null; // 'edit-contract'|'new-contract'|'renew-contract'|'edit-assignment'|'edit-item'
+  let drawerMode = null; // 'edit-contract'|'new-contract'|'renew-contract'|'edit-assignment'|'edit-item'|'new-item'
   let drawerData = {};   // data passed when opening
 
   /* ── Utility ──────────────────────────────────────────────────── */
@@ -60,7 +60,7 @@
       if (v !== null && v !== undefined) fd.append(k, v);
     });
     fetch(LOCARC_FE.ajaxUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
-      .then(r => r.json())
+      .then(parseAjaxResponse)
       .then(json => {
         if (json && json.success) { onOk && onOk(json.data); }
         else { const m = (json && json.data) ? json.data : 'Erreur serveur'; onErr ? onErr(m) : toast(m, 'error'); }
@@ -74,7 +74,7 @@
     url.searchParams.set('nonce', LOCARC_FE.nonce);
     Object.entries(params || {}).forEach(([k, v]) => url.searchParams.set(k, v));
     fetch(url.toString(), { credentials: 'same-origin' })
-      .then(r => r.json())
+      .then(parseAjaxResponse)
       .then(json => {
         if (json && json.success) { onOk && onOk(json.data); }
         else { const m = (json && json.data) ? json.data : 'Erreur serveur'; onErr ? onErr(m) : toast(m, 'error'); }
@@ -83,6 +83,17 @@
   }
 
   /* ── Toast ────────────────────────────────────────────────────── */
+
+  function parseAjaxResponse(response) {
+    return response.text().then(text => {
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        const readable = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        throw new Error(readable || ('HTTP ' + response.status));
+      }
+    });
+  }
 
   function toast(msg, type) {
     type = type || 'ok';
@@ -197,8 +208,8 @@
     const val = (v, fallback) => (v !== null && v !== undefined && String(v).trim() !== '') ? esc(v) : (fallback || '<em style="color:var(--fe-muted)">—</em>');
     if (kind === 'handles') {
       return `<div class="locarc-fe__item-preview-grid">
-        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Marque</span><span class="locarc-fe__item-preview-val">${val(data.brand)}</span></div>
-        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Modèle</span><span class="locarc-fe__item-preview-val">${val(data.model)}</span></div>
+        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Poignée</span><span class="locarc-fe__item-preview-val">${val(data.brand)}</span></div>
+        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Branches</span><span class="locarc-fe__item-preview-val">${val(data.model)}</span></div>
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Taille</span><span class="locarc-fe__item-preview-val">${val(data.size)}</span></div>
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Latéralité</span><span class="locarc-fe__item-preview-val">${val(data.handedness)}</span></div>
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Couleur</span><span class="locarc-fe__item-preview-val">${val(data.color)}</span></div>
@@ -211,10 +222,17 @@
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Latéralité</span><span class="locarc-fe__item-preview-val">${val(data.handedness)}</span></div>
       </div>`;
     }
-    if (kind === 'init_bows') {
+    if (kind === 'stabilizations') {
       return `<div class="locarc-fe__item-preview-grid">
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Marque</span><span class="locarc-fe__item-preview-val">${val(data.brand)}</span></div>
-        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Modèle</span><span class="locarc-fe__item-preview-val">${val(data.model)}</span></div>
+        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Modele</span><span class="locarc-fe__item-preview-val">${val(data.model)}</span></div>
+        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Commentaire</span><span class="locarc-fe__item-preview-val">${val(data.comment)}</span></div>
+      </div>`;
+    }
+    if (kind === 'init_bows') {
+      return `<div class="locarc-fe__item-preview-grid">
+        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Poignee</span><span class="locarc-fe__item-preview-val">${val(data.brand)}</span></div>
+        <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Branches</span><span class="locarc-fe__item-preview-val">${val(data.model)}</span></div>
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Taille</span><span class="locarc-fe__item-preview-val">${val(data.size)}</span></div>
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Puissance</span><span class="locarc-fe__item-preview-val">${val(data.power) !== '<em style="color:var(--fe-muted)">—</em>' ? val(data.power) + ' #' : val(data.power)}</span></div>
         <div class="locarc-fe__item-preview-cell"><span class="locarc-fe__item-preview-lbl">Latéralité</span><span class="locarc-fe__item-preview-val">${val(data.handedness)}</span></div>
@@ -340,7 +358,7 @@
               try { parsed = JSON.parse(btn.dataset.item); } catch(e) {}
               dropdown.hidden = true;
               // If this is a handle/branches/sights/init_bows field, load preview
-              if ((kind === 'handles' || kind === 'branches' || kind === 'sights' || kind === 'init_bows') && btn.dataset.value) {
+              if ((kind === 'handles' || kind === 'branches' || kind === 'sights' || kind === 'stabilizations' || kind === 'init_bows') && btn.dataset.value) {
                 const preview = wrap.parentElement && wrap.parentElement.querySelector('.locarc-fe__item-preview');
                 if (preview) loadItemPreview(preview, kind, btn.dataset.value);
               }
@@ -352,7 +370,7 @@
     });
 
     // When user manually types an identifier and leaves the field, load preview
-    if (kind === 'handles' || kind === 'branches' || kind === 'sights' || kind === 'init_bows') {
+    if (kind === 'handles' || kind === 'branches' || kind === 'sights' || kind === 'stabilizations' || kind === 'init_bows') {
       input.addEventListener('blur', () => {
         const val = input.value.trim();
         if (!val) return;
@@ -424,6 +442,13 @@
         ${acInput('fe_sight_identifier', data.sight_identifier || '', 'sights')}
         <div class="locarc-fe__field-hint">${LOCARC_FE.modules.sightRequired ? 'Requis' : 'Laisser vide si pas de viseur'}</div>
         <div class="locarc-fe__item-preview" data-for="sight"></div>
+      </div>` : ''}
+      ${(LOCARC_FE.modules && LOCARC_FE.modules.stabilizations) ? `
+      <div class="locarc-fe__field">
+        <label for="fe_stabilization_identifier">Stabilisation (identifiant)${LOCARC_FE.modules.stabilizationRequired ? ' <span class="locarc-fe__required">*</span>' : ''}</label>
+        ${acInput('fe_stabilization_identifier', data.stabilization_identifier || '', 'stabilizations')}
+        <div class="locarc-fe__field-hint">${LOCARC_FE.modules.stabilizationRequired ? 'Requis' : 'Laisser vide si pas de stabilisation'}</div>
+        <div class="locarc-fe__item-preview" data-for="stabilization"></div>
       </div>` : ''}
       <div id="fe_init_bow_wrap" style="${(LOCARC_FE.modules && LOCARC_FE.modules.initBows && data.contract_type === 'arc_initiation') ? '' : 'display:none'}">
         <div class="locarc-fe__field">
@@ -569,6 +594,7 @@
       handle_identifier:    v('fe_handle_identifier'),
       branches_identifier:  v('fe_branches_identifier'),
       sight_identifier:     v('fe_sight_identifier'),
+      stabilization_identifier: v('fe_stabilization_identifier'),
       init_bow_identifier:  v('fe_init_bow_identifier'),
       payment_method:       v('fe_payment_method'),
       caution_amount:       v('fe_caution_amount'),
@@ -631,6 +657,18 @@
         ${field('fe_is_available', 'Disponibilité', selectEl('fe_is_available', availOptions, data.is_available))}
         ${field('fe_comment', 'Commentaire', inputEl('fe_comment', 'text', data.comment))}`;
     }
+    if (kind === 'stabilizations') {
+      return `
+        <div class="locarc-fe__field-row">
+          ${field('fe_identifier', 'Identifiant', inputEl('fe_identifier', 'text', data.identifier), '', true)}
+          ${field('fe_purchase_year', "Annee d'achat", inputEl('fe_purchase_year', 'number', data.purchase_year, 'min="2000" max="2099"'))}
+        </div>
+        ${field('fe_brand', 'Marque', inputEl('fe_brand', 'text', data.brand))}
+        ${field('fe_model', 'Modele', inputEl('fe_model', 'text', data.model))}
+        ${field('fe_purchase_price', "Prix d'achat (EUR)", inputEl('fe_purchase_price', 'number', data.purchase_price, 'min="0" step="0.01"'))}
+        ${field('fe_is_available', 'Etat', selectEl('fe_is_available', availOptions, data.is_available))}
+        ${field('fe_comment', 'Commentaire', inputEl('fe_comment', 'text', data.comment))}`;
+    }
     if (kind === 'init_bows') {
       const handOptions = [['', '—'], ['Droite', 'Droite'], ['Gauche', 'Gauche']];
       return `
@@ -642,8 +680,8 @@
           ${field('fe_power', 'Puissance (lbs)', inputEl('fe_power', 'number', data.power, 'min="0"'))}
           ${field('fe_handedness', 'Latéralité', selectEl('fe_handedness', handOptions, data.handedness || ''))}
         </div>
-        ${field('fe_brand', 'Marque', inputEl('fe_brand', 'text', data.brand))}
-        ${field('fe_model', 'Modèle', inputEl('fe_model', 'text', data.model))}
+        ${field('fe_brand', 'Poignée (marque + modèle)', inputEl('fe_brand', 'text', data.brand))}
+        ${field('fe_model', 'Branches (marque + modèle)', inputEl('fe_model', 'text', data.model))}
         <div class="locarc-fe__field-row">
           ${field('fe_purchase_year', "Année d'achat", inputEl('fe_purchase_year', 'number', data.purchase_year, 'min="2000" max="2099"'))}
           ${field('fe_purchase_price', "Prix d'achat (€)", inputEl('fe_purchase_price', 'number', data.purchase_price, 'min="0" step="0.01"'))}
@@ -654,7 +692,7 @@
     if (kind === 'branches') {
       return `
         <div class="locarc-fe__field-row">
-          ${field('fe_identifier', 'Identifiant', inputEl('fe_identifier', 'text', data.identifier, data.id ? '' : ''), '', true)}
+          ${field('fe_identifier', 'Identifiant', inputEl('fe_identifier', 'text', data.identifier), '', true)}
           ${field('fe_size', 'Taille', inputEl('fe_size', 'number', data.size, 'min="0"'))}
         </div>
         <div class="locarc-fe__field-row">
@@ -711,6 +749,10 @@
         const sp = drawerBody.querySelector('[data-for="sight"].locarc-fe__item-preview');
         if (sp) loadItemPreview(sp, 'sights', data.sight_identifier);
       }
+      if (data.stabilization_identifier) {
+        const stp = drawerBody.querySelector('[data-for="stabilization"].locarc-fe__item-preview');
+        if (stp) loadItemPreview(stp, 'stabilizations', data.stabilization_identifier);
+      }
       if (data.init_bow_identifier) {
         const ibp = drawerBody.querySelector('[data-for="init_bow"].locarc-fe__item-preview');
         if (ibp) loadItemPreview(ibp, 'init_bows', data.init_bow_identifier);
@@ -732,7 +774,7 @@
       licence: '', contract_type: 'complet',
       start_date: todayStr, end_date: nextYearStr,
       handle_identifier: '', branches_identifier: '',
-      sight_identifier: '', init_bow_identifier: '', is_paid: 0,
+      sight_identifier: '', stabilization_identifier: '', init_bow_identifier: '', is_paid: 0,
     });
     wireContractForm();
     openDrawer();
@@ -767,6 +809,10 @@
         const sp = drawerBody.querySelector('[data-for="sight"].locarc-fe__item-preview');
         if (sp) loadItemPreview(sp, 'sights', data.sight_identifier);
       }
+      if (data.stabilization_identifier) {
+        const stp = drawerBody.querySelector('[data-for="stabilization"].locarc-fe__item-preview');
+        if (stp) loadItemPreview(stp, 'stabilizations', data.stabilization_identifier);
+      }
       if (data.init_bow_identifier) {
         const ibp = drawerBody.querySelector('[data-for="init_bow"].locarc-fe__item-preview');
         if (ibp) loadItemPreview(ibp, 'init_bows', data.init_bow_identifier);
@@ -796,7 +842,7 @@
   }
 
   function openEditItem(id, kind) {
-    const itemTitles = { branches: 'Modifier les branches', handles: 'Modifier la poignée', sights: 'Modifier le viseur', init_bows: "Modifier l'arc d'initiation" };
+    const itemTitles = { branches: 'Modifier les branches', handles: 'Modifier la poignée', sights: 'Modifier le viseur', stabilizations: 'Modifier la stabilisation', init_bows: "Modifier l'arc d'initiation" };
     drawerTitle.textContent = itemTitles[kind] || 'Modifier';
     drawerBody.innerHTML = '<p style="color:var(--fe-muted)">Chargement…</p>';
     drawerMode = 'edit-item';
@@ -806,6 +852,15 @@
       drawerData.original = data;
       drawerBody.innerHTML = buildItemForm(data, kind);
     }, err => { showDrawerError(err); });
+  }
+
+  function openNewItem(kind) {
+    const itemTitles = { branches: 'Ajouter des branches', handles: 'Ajouter une poignée', sights: 'Ajouter un viseur', stabilizations: 'Ajouter une stabilisation', init_bows: "Ajouter un arc d'initiation" };
+    drawerTitle.textContent = itemTitles[kind] || 'Ajouter';
+    drawerMode = 'new-item';
+    drawerData = { kind };
+    drawerBody.innerHTML = buildItemForm({}, kind);
+    openDrawer();
   }
 
   /* ─────────────────────────────────────────────────────────────────
@@ -846,6 +901,7 @@
     } else if (drawerMode === 'edit-assignment') {
       const v = id => (drawerBody.querySelector('#' + id) || {}).value || '';
       const payload = {
+        ...drawerData.original,
         id: drawerData.id,
         licence: drawerData.original.licence,
         contract_type: drawerData.original.contract_type,
@@ -855,30 +911,34 @@
         branches_identifier: v('fe_branches_identifier'),
         is_paid: drawerData.original.is_paid,
       };
-      ajax('locarc_save_contract', payload, () => {
+      ajax('locarc_save_contract', payload, data => {
         done();
         toast('Affectation mise à jour !', 'ok');
+        if (data && data.pdf_error) toast('PDF : ' + data.pdf_error, 'warn');
         closeDrawer();
         reloadSection('rented');
       }, err => { done(); showDrawerError(err); });
 
-    } else if (drawerMode === 'edit-item') {
+    } else if (drawerMode === 'edit-item' || drawerMode === 'new-item') {
       const kind = drawerData.kind;
       const v  = id => (drawerBody.querySelector('#' + id) || {}).value;
-      const payload = { id: drawerData.id, kind };
+      const payload = { kind };
+      if (drawerMode === 'edit-item') payload.id = drawerData.id;
       const fields = kind === 'branches'
-        ? ['identifier','size','power','brand','model','comment','is_available','purchase_year']
+        ? ['identifier','brand','model','size','power','comment','is_available','purchase_year']
         : kind === 'sights'
         ? ['identifier','brand','model','handedness','comment','is_available','purchase_year','purchase_price']
+        : kind === 'stabilizations'
+        ? ['identifier','brand','model','comment','is_available','purchase_year','purchase_price']
         : kind === 'init_bows'
         ? ['identifier','brand','model','size','power','handedness','comment','is_available','purchase_year','purchase_price']
-        : ['identifier','size','handedness','brand','model','color','comment','is_available','purchase_year'];
+        : ['identifier','brand','model','size','handedness','color','comment','is_available','purchase_year'];
       fields.forEach(f => { const val = v('fe_' + f); if (val !== undefined) payload[f] = val; });
 
       if (!payload.identifier) { showDrawerError('L\'identifiant est requis.'); done(); return; }
       ajax('locarc_save_item', payload, () => {
         done();
-        toast('Matériel mis à jour !', 'ok');
+        toast(drawerMode === 'new-item' ? 'Matériel ajouté !' : 'Matériel mis à jour !', 'ok');
         closeDrawer();
         reloadSection(kind);
       }, err => { done(); showDrawerError(err); });
@@ -980,7 +1040,7 @@
     const viewBtn = e.target.closest('.js-view-item');
     if (viewBtn) { openViewItem(viewBtn.dataset.identifier, viewBtn.dataset.kind); return; }
 
-    const btn = e.target.closest('button[data-id], button.js-new-contract, a[data-id]');
+    const btn = e.target.closest('button[data-id], button.js-new-contract, button.js-add-item, a[data-id]');
     if (!btn) return;
     if (btn.tagName === 'BUTTON') e.preventDefault();
     const id = btn.dataset.id;
@@ -996,6 +1056,9 @@
 
     // Edit equipment assignment
     if (btn.classList.contains('js-edit-assignment')) { openEditAssignment(id); return; }
+
+    // Add inventory item
+    if (btn.classList.contains('js-add-item')) { openNewItem(btn.dataset.kind); return; }
 
     // Edit inventory item
     if (btn.classList.contains('js-edit-item')) { openEditItem(id, btn.dataset.kind); return; }

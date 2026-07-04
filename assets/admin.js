@@ -38,8 +38,8 @@ jQuery(function($){
 
   function warnPdfIfNeeded(resp){
     const data = resp && resp.data ? resp.data : {};
-    if(data && data.pdf_generated === false){
-      alert('Contrat enregistrÃ©, mais le PDF nâ€™a pas Ã©tÃ© gÃ©nÃ©rÃ© : ' + (data.pdf_error || 'erreur inconnue'));
+    if(data && data.pdf_generated === false && data.pdf_error){
+      alert("Contrat enregistré, mais le PDF n’a pas pu être régénéré : " + data.pdf_error);
     }
   }
 
@@ -76,7 +76,7 @@ function confirmDelete(label){
           <option value="especes">Espèces</option>
         </select>
       </div>
-      <div>
+      <div id="${p}caution-wrap">
         <label>Montant du chèque de caution (€)</label>
         <input type="number" step="0.01" min="0" name="caution_amount" id="${p}caution-amount" placeholder="ex: 200" />
       </div>
@@ -97,6 +97,7 @@ function confirmDelete(label){
     const $method = $('#' + p + 'payment-method');
     const $wrap = $('#' + p + 'cheque-dates-wrap');
     const $caution = $('#' + p + 'caution-amount');
+    const $cautionWrap = $('#' + p + 'caution-wrap');
     let $type = $();
     if(prefix === 'edit') $type = $('#locarc-contract-type');
     else if(prefix === 'renew') $type = $('#locarc-renew-type');
@@ -134,9 +135,11 @@ function confirmDelete(label){
       const t = ($type.val() || '').trim();
       if(t === 'pret'){
         clearFinance();
+        $cautionWrap.hide();
         $wrap.hide();
         return;
       }
+      $cautionWrap.show();
       const def = defaultCautionForType(t);
       if(force || !$caution.val()){
         $caution.val(def);
@@ -277,6 +280,7 @@ function confirmDelete(label){
   $('#locarc-add-handle').on('click', ()=> openEditItem('handles', 0));
   $('#locarc-add-member').on('click', ()=> openEditItem('members', 0));
   $('#locarc-add-sight').on('click', ()=> openEditItem('sights', 0));
+  $('#locarc-add-stabilization').on('click', ()=> openEditItem('stabilizations', 0));
   $('#locarc-add-init_bow').on('click', ()=> openEditItem('init_bows', 0));
 
   $('.locarc-table').on('click', '.locarc-edit', function(){
@@ -290,9 +294,10 @@ function confirmDelete(label){
     const isHandles = (kind === 'handles');
     const isMembers = (kind === 'members');
     const isSights = (kind === 'sights');
+    const isStabilizations = (kind === 'stabilizations');
     const isInitBows = (kind === 'init_bows');
     const kindLabel = isBranches ? ' des branches' : isHandles ? ' une poignée' : isSights ? ' un viseur' : isInitBows ? " un arc d'initiation" : ' un licencié';
-    const title = (id ? 'Modifier' : 'Ajouter') + kindLabel;
+    const title = (id ? 'Modifier' : 'Ajouter') + (isStabilizations ? ' une stabilisation' : kindLabel);
 
     const show = (row)=>{
       const body = (isMembers ? buildMemberForm(row||{}) : buildItemForm(kind, row||{}));
@@ -303,7 +308,7 @@ function confirmDelete(label){
       openModal(title, body, footer);
 
       // When creating equipment, show a read-only list of existing identifiers while typing.
-      if(!id && (kind==='branches' || kind==='handles' || kind==='sights' || kind==='init_bows')){
+      if(!id && (kind==='branches' || kind==='handles' || kind==='sights' || kind==='stabilizations' || kind==='init_bows')){
         const $identifier = modal.find('input[name="identifier"]');
         if($identifier.length) buildIdentifierPeek($identifier, kind);
       }
@@ -328,10 +333,13 @@ function confirmDelete(label){
             }
           })
           .fail(xhr=>{
-            const msg = (xhr.responseJSON && (xhr.responseJSON.data || xhr.responseJSON.message))
-              ? (xhr.responseJSON.data || xhr.responseJSON.message)
-              : (xhr.responseText || ('HTTP ' + xhr.status));
-            alert('Erreur AJAX: ' + msg);
+            var rj = xhr.responseJSON;
+            var msg = (rj && rj.data && rj.data.message)
+              ? rj.data.message
+              : (rj && (rj.data || rj.message))
+                ? (rj.data || rj.message)
+                : (xhr.responseText || ('HTTP ' + xhr.status));
+            alert('Erreur : ' + msg);
           })
         );
       });
@@ -353,6 +361,7 @@ function confirmDelete(label){
     const tableId = kind==='branches' ? 'locarc-branches-table'
       : kind==='handles' ? 'locarc-handles-table'
       : kind==='sights' ? 'locarc-sights-table'
+      : kind==='stabilizations' ? 'locarc-stabilizations-table'
       : kind==='init_bows' ? 'locarc-init_bows-table'
       : 'locarc-members-table';
     const $table = $('#'+tableId);
@@ -425,6 +434,24 @@ function confirmDelete(label){
           <button class="button button-link-delete locarc-delete" data-kind="sights">Supprimer</button>
         </td>
       `);
+    } else if(kind==='stabilizations') {
+      const disp = dispLabel(row.is_available);
+      $tr.toggleClass('locarc-flag', Number(row.is_available)===2);
+      $tr.html(`
+        <td></td>
+        <td><code>${esc(row.identifier||'')}</code></td>
+        <td>${esc(row.brand||'')}</td>
+        <td>${esc(row.model||'')}</td>
+        <td>${disp}</td>
+        <td>${esc(row.comment||'')}</td>
+        <td></td>
+        <td>${esc(row.purchase_year||'')}</td>
+        <td>${esc(row.purchase_price||'')}</td>
+        <td>
+          <button class="button locarc-edit" data-kind="stabilizations">Modifier</button>
+          <button class="button button-link-delete locarc-delete" data-kind="stabilizations">Supprimer</button>
+        </td>
+      `);
     } else if(kind==='init_bows') {
       const disp = dispLabel(row.is_available);
       $tr.toggleClass('locarc-flag', Number(row.is_available)===2);
@@ -462,7 +489,7 @@ function confirmDelete(label){
     }
 
     // Re-number first column (inventory tables only)
-    if(kind==='branches' || kind==='handles' || kind==='sights' || kind==='init_bows'){
+    if(kind==='branches' || kind==='handles' || kind==='sights' || kind==='stabilizations' || kind==='init_bows'){
       $table.find('tbody tr').each(function(idx){
         $(this).children('td').first().text(idx+1);
       });
@@ -475,6 +502,7 @@ function confirmDelete(label){
     const isBranches = (kind === 'branches');
     const isHandles  = (kind === 'handles');
     const isSights   = (kind === 'sights');
+    const isStabilizations = (kind === 'stabilizations');
     const isInitBows = (kind === 'init_bows');
     const availVal = (v)=> {
       const n = Number(v);
@@ -530,14 +558,14 @@ function confirmDelete(label){
           <div class="locarc-hint">Identifiant unique (sera utilisé pour les contrats et l'autocomplete).</div>
         </div>
         ${sizeAndPower}
-        ${!isBranches ? handednessField : ''}
+        ${(!isBranches && !isStabilizations) ? handednessField : ''}
         ${colorField}
         <div>
-          <label>Marque</label>
+          <label>${isInitBows ? 'Poignee (marque + modele)' : 'Marque'}</label>
           <input type="text" name="brand" value="${esc(row.brand||'')}" />
         </div>
         <div>
-          <label>Modèle</label>
+          <label>${isInitBows ? 'Branches (marque + modele)' : 'Modele'}</label>
           <input type="text" name="model" value="${esc(row.model||'')}" />
         </div>
         <div>
@@ -712,8 +740,9 @@ function confirmDelete(label){
       if(!r.success){ alert('Erreur: ' + (r.data?.message || r.data || '')); return; }
       alert('✅ Email envoyé');
     }).fail(xhr=>{
-      const msg = (xhr.responseJSON && (xhr.responseJSON.data || xhr.responseJSON.message))
-        ? (xhr.responseJSON.data || xhr.responseJSON.message)
+      var rj = xhr.responseJSON;
+      var msg = (rj && rj.data && rj.data.message) ? rj.data.message
+        : (rj && (rj.data || rj.message)) ? (rj.data || rj.message)
         : (xhr.responseText || ('HTTP ' + xhr.status));
       alert('Erreur envoi email: ' + msg);
     }));
@@ -778,6 +807,16 @@ function confirmDelete(label){
             <input type="text" name="branches_identifier" id="locarc-branches2" placeholder="ex: EX-W-7024-1" />
             <div class="locarc-hint" id="locarc-branches2-warn"></div>
           </div>
+          <div class="full">
+            <label>Viseur (ID)</label>
+            <input type="text" name="sight_identifier" id="locarc-sight2" autocomplete="off" />
+            <div class="locarc-hint" id="locarc-sight2-warn"></div>
+          </div>
+          <div class="full">
+            <label>Stabilisation (ID)</label>
+            <input type="text" name="stabilization_identifier" id="locarc-stabilization2" autocomplete="off" />
+            <div class="locarc-hint" id="locarc-stabilization2-warn"></div>
+          </div>
         </form>
       `;
       const footer = `
@@ -823,6 +862,8 @@ function confirmDelete(label){
       initContractFinanceFields('edit', c);
       $('#locarc-handle2').val(c.handle_identifier||'');
       $('#locarc-branches2').val(c.branches_identifier||'');
+      $('#locarc-sight2').val(c.sight_identifier||'');
+      $('#locarc-stabilization2').val(c.stabilization_identifier||'');
 
       function toggleCustomPrice(){
         const t = ($('#locarc-contract-type').val()||'');
@@ -846,6 +887,8 @@ function confirmDelete(label){
 
       buildSuggest($('#locarc-handle2'), 'handles');
       buildSuggest($('#locarc-branches2'), 'branches');
+      buildSuggest($('#locarc-sight2'), 'sights');
+      buildSuggest($('#locarc-stabilization2'), 'stabilizations');
 
       function checkAssigned(kind, identifier, $warn, contractId){
         if(!identifier){ $warn.text(''); return; }
@@ -867,13 +910,21 @@ function confirmDelete(label){
         const idv = $('#locarc-branches2').val().trim();
         checkAssigned('branches', idv, $('#locarc-branches2-warn'), id);
       });
+      $('#locarc-sight2').on('change blur', function(){
+        const idv = $('#locarc-sight2').val().trim();
+        checkAssigned('sights', idv, $('#locarc-sight2-warn'), id);
+      });
+      $('#locarc-stabilization2').on('change blur', function(){
+        const idv = $('#locarc-stabilization2').val().trim();
+        checkAssigned('stabilizations', idv, $('#locarc-stabilization2-warn'), id);
+      });
 
       modal.off('click', '#locarc-cancel').on('click', '#locarc-cancel', closeModal);
       modal.off('click', '#locarc-save-contract').on('click', '#locarc-save-contract', function(e){
         e.preventDefault();
         e.stopPropagation();
         const $btn = $(this);
-        const data = formToObject(modal.find('form'));
+        const data = {...c, ...formToObject(modal.find('form'))};
         data.id = id;
         if((data.contract_type||'')==='personnalise' && (!data.custom_price || data.custom_price==='')){
           alert('Montant requis pour un contrat personnalisé');
@@ -894,10 +945,13 @@ function confirmDelete(label){
             closeModal();
           })
           .fail(xhr=>{
-            const msg = (xhr.responseJSON && (xhr.responseJSON.data || xhr.responseJSON.message))
-              ? (xhr.responseJSON.data || xhr.responseJSON.message)
-              : (xhr.responseText || ('HTTP ' + xhr.status));
-            alert('Erreur AJAX: ' + msg);
+            var rj = xhr.responseJSON;
+            var msg = (rj && rj.data && rj.data.message)
+              ? rj.data.message
+              : (rj && (rj.data || rj.message))
+                ? (rj.data || rj.message)
+                : (xhr.responseText || ('HTTP ' + xhr.status));
+            alert('Erreur : ' + msg);
           })
         );
       });
@@ -1100,10 +1154,11 @@ function confirmDelete(label){
           window.location.reload();
         })
         .fail(xhr=>{
-          const msg = (xhr.responseJSON && (xhr.responseJSON.data || xhr.responseJSON.message))
-            ? (xhr.responseJSON.data || xhr.responseJSON.message)
+          var rj = xhr.responseJSON;
+          var msg = (rj && rj.data && rj.data.message) ? rj.data.message
+            : (rj && (rj.data || rj.message)) ? (rj.data || rj.message)
             : (xhr.responseText || ('HTTP ' + xhr.status));
-          alert('Erreur AJAX: ' + msg);
+          alert('Erreur : ' + msg);
         })
         );
       });
@@ -1268,7 +1323,7 @@ function confirmDelete(label){
         e.preventDefault();
         e.stopPropagation();
         const $btn = $(this);
-        const data = formToObject(modal.find('form'));
+        const data = {...c, ...formToObject(modal.find('form'))};
         data.id = id;
         // keep existing contract metadata
         data.licence = c.licence;
@@ -1289,10 +1344,13 @@ function confirmDelete(label){
             closeModal();
           })
           .fail(xhr=>{
-            const msg = (xhr.responseJSON && (xhr.responseJSON.data || xhr.responseJSON.message))
-              ? (xhr.responseJSON.data || xhr.responseJSON.message)
-              : (xhr.responseText || ('HTTP ' + xhr.status));
-            alert('Erreur AJAX: ' + msg);
+            var rj = xhr.responseJSON;
+            var msg = (rj && rj.data && rj.data.message)
+              ? rj.data.message
+              : (rj && (rj.data || rj.message))
+                ? (rj.data || rj.message)
+                : (xhr.responseText || ('HTTP ' + xhr.status));
+            alert('Erreur : ' + msg);
           })
         );
       });
@@ -1408,6 +1466,16 @@ function confirmDelete(label){
             <input type="number" name="branches_power" id="locarc-branches-power" readonly />
           </div>
         </div>
+        <div class="full">
+          <label>Viseur (ID)</label>
+          <input type="text" name="sight_identifier" id="locarc-sight2" autocomplete="off" />
+          <div class="locarc-hint" id="locarc-sight2-warn"></div>
+        </div>
+        <div class="full">
+          <label>Stabilisation (ID)</label>
+          <input type="text" name="stabilization_identifier" id="locarc-stabilization2" autocomplete="off" />
+          <div class="locarc-hint" id="locarc-stabilization2-warn"></div>
+        </div>
       </form>
     `;
     const footer = `
@@ -1487,6 +1555,8 @@ function confirmDelete(label){
     // Identifier suggestions + auto-fill characteristics
     buildSuggest($('#locarc-handle2'), 'handles');
     buildSuggest($('#locarc-branches2'), 'branches');
+    buildSuggest($('#locarc-sight2'), 'sights');
+    buildSuggest($('#locarc-stabilization2'), 'stabilizations');
 
     $('#locarc-handle2').on('locarc:selected', function(e, it){
       $('#locarc-handle2').val(it.value||'');
@@ -1504,6 +1574,18 @@ function confirmDelete(label){
       const idv = $('#locarc-branches2').val().trim();
       checkAssigned('branches', idv, $('#locarc-branches2-warn'), 0);
       fetchAndFill('branches', idv);
+    });
+    $('#locarc-sight2').on('locarc:selected', function(e, it){
+      $('#locarc-sight2').val(it.value||'');
+    }).on('change blur', function(){
+      const idv = $('#locarc-sight2').val().trim();
+      checkAssigned('sights', idv, $('#locarc-sight2-warn'), 0);
+    });
+    $('#locarc-stabilization2').on('locarc:selected', function(e, it){
+      $('#locarc-stabilization2').val(it.value||'');
+    }).on('change blur', function(){
+      const idv = $('#locarc-stabilization2').val().trim();
+      checkAssigned('stabilizations', idv, $('#locarc-stabilization2-warn'), 0);
     });
 
     // Pret => allow manual editing if no identifier
@@ -1567,10 +1649,11 @@ function confirmDelete(label){
           window.location.href = base + sep + 'new_id=' + encodeURIComponent(String(r.data.id||''));
         })
         .fail(xhr=>{
-          const msg = (xhr.responseJSON && (xhr.responseJSON.data || xhr.responseJSON.message))
-            ? (xhr.responseJSON.data || xhr.responseJSON.message)
+          var rj = xhr.responseJSON;
+          var msg = (rj && rj.data && rj.data.message) ? rj.data.message
+            : (rj && (rj.data || rj.message)) ? (rj.data || rj.message)
             : (xhr.responseText || ('HTTP ' + xhr.status));
-          alert('Erreur AJAX: ' + msg);
+          alert('Erreur : ' + msg);
         })
       );
     });
